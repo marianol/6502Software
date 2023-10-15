@@ -47,11 +47,9 @@ ZP_START1 = $00
   .org $A000 ; ROM Start
 
 reset:
-  ; Via example from https://mansfield-devine.com/speculatrix/2022/04/zolatron-64-using-the-6522-vias-timers-part-1/
-  
   ; init routines
-  jsr init_timer    ; VIA1 Timer
-  jsr init_serial  
+  jsr init_timer    ; VIA1 IRQ Timer
+  jsr init_serial   ; 65B50 ACIA
 
   ; Set VIA portB
   lda #$ff ; Set all pins on port B to output
@@ -82,6 +80,17 @@ blink:
 exit_blink:
   pla
   rts
+
+serial_out:  ; sent char in A to the serial port
+  pha
+  pool_acia:
+    lda ACIA_STATUS 
+    and ACIA_TDRE     ; looking at Bit 1 which shows TX data register empty
+    beq pool_acia
+  pla
+  sta ACIA_DATA
+  rts
+
 
 init_timer:  ; INIT VIA Timer 1 
   lda #0
