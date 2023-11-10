@@ -3,7 +3,7 @@
   .encoding "ascii"     
   .org $8000 ; skip the first 8k since rom stats at $A000
   .text "ROM starts at $A000 (2000)"
-  .text "blink.asm VIA at $9000"
+  .text "blink.asm VIA at $9000 ACIA at $8010"
   nop 
   
   .org $A000 ; ROM Start
@@ -21,7 +21,7 @@ reset:
 
   ; init routines
   jsr init_timer    ; VIA1 IRQ Timer
-  ;jsr init_serial   ; 65B50 ACIA
+  jsr init_serial   ; 65B50 ACIA
 
   lda #$50 ; 01010000
   sta VIA1_PORTB
@@ -30,7 +30,8 @@ reset:
 main_loop:
   nop
   jsr blink
-
+  lda #'A'
+  jmp serial_out
   jmp main_loop
 
 blink:
@@ -84,8 +85,8 @@ init_serial:
   lda #ACIA_CONFIG    ; 115200bps 8,N,1
   sta ACIA_CONTROL
   lda #0
-  sta PTR_RD_RX_BUFFER
-  sta PTR_WR_RX_BUFFER
+  sta PTR_RD_RX_BUF
+  sta PTR_WR_RX_BUF
   rts
 
 irq_handler:

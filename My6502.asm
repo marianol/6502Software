@@ -48,8 +48,8 @@ ZP_START        = $00
 JIFFY           = $0A  ; $0A & $0B A two-byte memory location to store a jiffy counter each jiffy is 10 ms
 LED_STATUS      = $10
 LAST_TOGGLE     = $11
-PTR_RD_RX_BUF   = #12
-PTR_WR_RX_BUF   = #13
+PTR_RD_RX_BUF   = $12
+PTR_WR_RX_BUF   = $13
 
 ; page 1 from $0100-$01FF
 PAGE1_START     = $0100
