@@ -55,7 +55,8 @@ serial_out:  ; sent char in A to the serial port
   pha
   pool_acia:
     lda ACIA_STATUS 
-    and ACIA_TDRE     ; looking at Bit 1 which shows TX data register empty
+    and #ACIA_TDRE     ; looking at Bit 1 which shows TX data register empty
+    sta LED_STATUS
     beq pool_acia
   pla
   sta ACIA_DATA
