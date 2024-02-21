@@ -22,11 +22,29 @@ VIA1_T1CH   = $9005 ; Timer 1 Counter (high byte)
 VIA1_ACR    = $900B ;  Auxiliary Control register @
 VIA1_IFR    = $900D ; Interrupt Flag Register
 VIA1_IER    = $900E ; Interrupt Enable Register
+/* 
+6522 VIA IFR REGISTER
+Bit Desc
+7   Any IRQ
+6   Timer 1 Overflow Interrupt
+5   Timer 2 Overflow Interrupt
+4   CB1 Active Edge
+3   CB2 Active Edge
+2   Shift Register Complete 8 Shifts
+1   CA1 Active Edge
+0   CA2 Active Edge
+*/
 ; ACIA MC60B50
 ACIA_BASE     = $8010
-ACIA_STATUS   = ACIA_BASE
-ACIA_CONTROL  = ACIA_BASE
-ACIA_DATA     = ACIA_BASE + 8   ; ???? check this in hardware 
+ACIA_STATUS   = ACIA_BASE  ; RS 0 + R
+ACIA_CONTROL  = ACIA_BASE  ; RS 0 + W
+ACIA_DATA     = ACIA_BASE + 8 ; RS 1 + R/W > RX/TX
+/* 
+CS0	 > A4
+CS1	 > A4
+~CS2 > ~IO_SEL
+RS   > A3
+*/
 
 ; Constants
 ACIA_TDRE       = %00000010
@@ -48,8 +66,9 @@ ZP_START        = $00
 JIFFY           = $0A  ; $0A & $0B A two-byte memory location to store a jiffy counter each jiffy is 10 ms
 LED_STATUS      = $10
 LAST_TOGGLE     = $11
-PTR_RD_RX_BUF   = #12
-PTR_WR_RX_BUF   = #13
+LED_DIR         = $12
+PTR_RD_RX_BUF   = $13
+PTR_WR_RX_BUF   = $14
 
 ; page 1 from $0100-$01FF
 PAGE1_START     = $0100
