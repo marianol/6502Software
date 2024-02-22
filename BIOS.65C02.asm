@@ -3,7 +3,8 @@
   .encoding "ascii"     
   .org $8000 ; skip the first 8k since rom stats at $A000
   .text "ROM starts at $A000 (2000)      "
-  .text "bios.asm VIA at $9000"
+  .text "bios.asm                        "
+  .text "VIA at $9000"
   nop 
   
   .org $A000 ; ROM Start
@@ -31,35 +32,25 @@ reset:
 
   ; init routines
   jsr init_timer    ; VIA1 IRQ Timer
-  ;jsr init_serial   ; 65B50 ACIA
+  jsr init_serial   ; 65B50 ACIA
+  /*
+  lda #<startupMessage
+  sta PTR_TX
+  lda #>startupMessage
+  sta PTR_TX_H
+  jsr serial_out_str
+  */
+  lda #']'
+  jsr serial_out
+  
 
 ; Main BIOS Loop
 main_loop:
   nop
   jsr kitt_led ; just cycle the LEDs in Port B
-
+  ;jsr serial_in
+  ;bcs serial_out
   jmp main_loop
-
-blink:
-  pha
-  sec ; am I doing this because I only compare the low byte?
-  lda JIFFY
-  sbc LAST_TOGGLE
-  cmp #25 ; have 250ms passed?
-  bcc exit_blink ; if not return 
-  ; time has passed rotate the LEDs
-  lda LED_STATUS
-  lsr ; move bit 0 in A to carry
-  bcc ror_done ; bit 0 was clear we are done
-  ora #$80 ; set bit 7 since bit 0 was set
-  ror_done: ;
-    sta LED_STATUS ; rotate right, Carry is shifted into bit 7 
-    sta VIA1_PORTB
-    lda JIFFY  
-    sta LAST_TOGGLE ; record the Jiffy of rotation 
-  exit_blink:
-    pla
-    rts
 
 ; Move LED bar in Port B like K.I.T.T
 kitt_led:
@@ -74,38 +65,73 @@ kitt_led:
   ldx LED_DIR ; check which way we are going
   beq go_left
   ; move led right 
+  lda #'>'
+  jsr serial_out 
   lda LED_STATUS
   lsr ; shift right, move bit 0 in A to carry
   bcc rot_done ; bit 0 was clear we are done
-  ora #$01 ; bit 0 was set so keep it
+  ora #$02 ; bit 0 was set so switch dir 00000010
   ldx #$00 
   jmp rot_done
   go_left: 
     ; move led left
+    lda #'<'
+    jsr serial_out 
     lda LED_STATUS
     asl ; shift left, move bit 7 in A to carry
     bcc rot_done ; bit 7 was clear we are done
-    ora #$80 ; bit 7 was set so keep it
+    ora #$40 ; bit 7 was set so switch dir 01000000
     ldx #$ff
   rot_done: ;
     sta LED_STATUS ; rotate done store new status 
     sta VIA1_PORTB
     lda JIFFY  
     sta LAST_TOGGLE ; record the Jiffy of rotation
-    stx LED_DIR ; store direction  
+    stx LED_DIR ; store direction 
+
   exit_kitt:
     plx
     pla
     rts
 
-serial_out:  ; sent char in A to the serial port
+; Serial Transmit Routine
+; Sends the char in A out the ACIA RS232
+serial_out:  
   pha
-  pool_acia:
+  pool_acia: ; pulling mode until ready to TX
     lda ACIA_STATUS 
-    and ACIA_TDRE     ; looking at Bit 1 which shows TX data register empty
-    beq pool_acia
+    and ACIA_TDRE     ; looking at Bit 1 TX Data Register Empty > High = Empty
+    beq pool_acia     ; pooling loop if empty
   pla
-  sta ACIA_DATA
+  sta ACIA_DATA       ; output char in A to TDRE
+  rts
+
+; Serial Receive Routine
+; Checks if the ACIA has RX a characted and put it in A 
+; if a byte was received sets the carry flag, if not it clears it
+serial_in:
+  lda ACIA_STATUS
+  and ACIA_RDRF     ; look at Bit 0 RX Data Register Full > High = Full
+  beq @no_data      ; nothing in the RX Buffer
+  lda ACIA_DATA     ; load the byte to A
+  sec
+  rts 
+@no_data:
+  clc
+  rts
+
+; Serial TX a string from memory
+; Sends the a null terminated string via RS232
+; PTR_TX is a pointer to the string memory location
+serial_out_str:
+  ldy #0
+  @loop:
+    lda (PTR_TX),y
+    beq @null_found
+    jsr serial_out
+    iny
+    bra @loop
+  @null_found:
   rts
 
 ; INIT VIA Timer 1 for the Jiffy counter
@@ -123,18 +149,21 @@ init_timer:
   sta VIA1_T1CH          ; This starts the timer running
   cli ; enable interrupts
   rts
-
+ 
+; INIT ACIA
+; Reset and set ACIA config. Init the RX buffer pointer
 init_serial:
   lda #ACIA_RESET
   sta ACIA_CONTROL
-  lda #ACIA_CONFIG    ; 115200bps 8,N,1
+  lda #ACIA_CFG_28    ; 28800 8,N,1
   sta ACIA_CONTROL
+  ; Init the RX buffer pointers
   lda #0
   sta PTR_RD_RX_BUF
   sta PTR_WR_RX_BUF
   rts
 
-; Main IRQ Handler Routine
+; Main IRQ Service Routine
 irq_handler:
   pha
   phx
@@ -159,12 +188,13 @@ irq_via1_timer1:
   irq_via1_end:
     jmp exit_isr
 
+; NMI Service Routine
 nmi_handler:
   jmp reset
 
 ; ROM Data
 startupMessage:
-  .byte	$0C,"## simple6502 ##",$0D,$0A,"-- v0.0.1",$0D,$0A,$00
+  .byte	$0C,"## My6502 ##",$0D,$0A,"-- v0.0.1",$0D,$0A,$00
 
 endMessage:
   .byte	$0D,$0A,"# Bye !!",$0D,$0A,$00

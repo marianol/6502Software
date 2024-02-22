@@ -34,10 +34,11 @@ Bit Desc
 1   CA1 Active Edge
 0   CA2 Active Edge
 */
+
 ; ACIA MC60B50
 ACIA_BASE     = $8010
-ACIA_STATUS   = ACIA_BASE  ; RS 0 + R
-ACIA_CONTROL  = ACIA_BASE  ; RS 0 + W
+ACIA_STATUS   = ACIA_BASE  ; Read Only RS 0 + R 
+ACIA_CONTROL  = ACIA_BASE  ; Write Only RS 0 + W
 ACIA_DATA     = ACIA_BASE + 8 ; RS 1 + R/W > RX/TX
 /* 
 CS0	 > A4
@@ -47,10 +48,19 @@ RS   > A3
 */
 
 ; Constants
+; ACIA
+; ACIA Config
+; 7/ RX IRQ 
+; 6,5/ TX IRQ & RTS 
+; 4,3,2/ Bit length, parity & stop
+; 1,0/ ÷1,÷16,÷64 Clock Divider & Reset 
+; CLK @ 1.8432Mhz 
 ACIA_TDRE       = %00000010
 ACIA_RDRF       = %00000001
-ACIA_CONFIG     = %00010101    ; 0/ Set No IRQ; 00/ no RTS; 101/ 8 bit,NONE,1 stop; 01/ x16 clock -> CLK 1.8432Mhz >> 115200bps 
-ACIA_RESET      = %00000011
+ACIA_RESET      = %00000011    ; 6850 reset
+ACIA_CFG_115    = %00010101    ; 8-N-1, 115200bps, no IRQ - /16 CLK 
+ACIA_CFG_28     = %00010110    ; 8-N-1, 28800bps, no IRQ - /64 CLK 
+ACIA_CFG_28I    = %10010110    ; 8-N-1, 28800bps, IRQ - /64 CLK 
 TIMER_INTVL     = $270E        ; The number the timer is going to count down from every 10 ms
 
 CR    = $0D
@@ -67,11 +77,14 @@ JIFFY           = $0A  ; $0A & $0B A two-byte memory location to store a jiffy c
 LED_STATUS      = $10
 LAST_TOGGLE     = $11
 LED_DIR         = $12
-PTR_RD_RX_BUF   = $13
-PTR_WR_RX_BUF   = $14
+PTR_RD_RX_BUF   = $13 ; RX Read Buffer Pointer
+PTR_WR_RX_BUF   = $14 ; RX Write Buffer Pointer
+PTR_TX          = $15 ; Transmit String Pointer
+PTR_TX_L        = $15 ;
+PTR_TX_H        = $16 ;
 
 ; page 1 from $0100-$01FF
 PAGE1_START     = $0100
 ; reserved memory variables
-ACIA_RX_BUFFER  = $0200  ; to $02FF > 256 byte serial receive buffer
+ACIA_RX_BUFFER  = $0200  ; Serial RX Buffer to $02FF > 256 byte serial receive buffer
 
