@@ -26,31 +26,33 @@ reset:
   sta VIA1_DDRB
   sta LED_DIR ; LED direction for KITT $FF right $00 left
   ; init port B
-  lda #$80 ; 10000000
+  lda #%00000001
   sta VIA1_PORTB
   sta LED_STATUS
 
   ; init routines
   jsr init_timer    ; VIA1 IRQ Timer
   jsr init_serial   ; 65B50 ACIA
-  /*
+
   lda #<startupMessage
   sta PTR_TX
   lda #>startupMessage
   sta PTR_TX_H
   jsr serial_out_str
-  */
-  lda #']'
+  lda #'>'
   jsr serial_out
+
   
 
 ; Main BIOS Loop
 main_loop:
   nop
   jsr kitt_led ; just cycle the LEDs in Port B
-  ;jsr serial_in
-  ;bcs serial_out
-  jmp main_loop
+  jsr serial_in
+  bcc no_char ; nothing received
+  jsr serial_out ; echo char
+  no_char:
+    jmp main_loop
 
 ; Move LED bar in Port B like K.I.T.T
 kitt_led:
@@ -66,7 +68,7 @@ kitt_led:
   beq go_left
   ; move led right 
   lda #'>'
-  jsr serial_out 
+  ;jsr serial_out 
   lda LED_STATUS
   lsr ; shift right, move bit 0 in A to carry
   bcc rot_done ; bit 0 was clear we are done
@@ -76,7 +78,7 @@ kitt_led:
   go_left: 
     ; move led left
     lda #'<'
-    jsr serial_out 
+    ;jsr serial_out 
     lda LED_STATUS
     asl ; shift left, move bit 7 in A to carry
     bcc rot_done ; bit 7 was clear we are done
@@ -100,7 +102,7 @@ serial_out:
   pha
   pool_acia: ; pulling mode until ready to TX
     lda ACIA_STATUS 
-    and ACIA_TDRE     ; looking at Bit 1 TX Data Register Empty > High = Empty
+    and #ACIA_TDRE     ; looking at Bit 1 TX Data Register Empty > High = Empty
     beq pool_acia     ; pooling loop if empty
   pla
   sta ACIA_DATA       ; output char in A to TDRE
@@ -111,7 +113,7 @@ serial_out:
 ; if a byte was received sets the carry flag, if not it clears it
 serial_in:
   lda ACIA_STATUS
-  and ACIA_RDRF     ; look at Bit 0 RX Data Register Full > High = Full
+  and #ACIA_RDRF     ; look at Bit 0 RX Data Register Full > High = Full
   beq @no_data      ; nothing in the RX Buffer
   lda ACIA_DATA     ; load the byte to A
   sec

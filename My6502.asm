@@ -6,7 +6,7 @@ and costants that define the hardware of my My6502 design.
 This enables to maintain the haerdware relared constants separated from 
 the main assembly code.
 
-Memorey Map:
+Memory Map:
 RAM	32k	0x0000	0x7FFF
 I/O	8k	0x8000	0x9FFF
 ROM	24k	0xA000	0xFFFF
