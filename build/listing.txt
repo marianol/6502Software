@@ -1,0 +1,327 @@
+ca65 V2.19 - Git a861d840
+Main file   : BIOS-My6502.s
+Current file: BIOS-My6502.s
+
+000000r 1               ; Written by Mariano Luna, 2024
+000000r 1               ; License: BSD-3-Clause
+000000r 1               ; https://opensource.org/license/bsd-3-clause
+000000r 1               ; Version 0.0.2
+000000r 1               
+000000r 1               .setcpu "65C02"
+000000r 1               
+000000r 1               .include "My6502.s" ; Constants and Labels
+000000r 2               ; Herdware for the My6502
+000000r 2               ;
+000000r 2               ; This file is ment to be included in source files and has the common variables
+000000r 2               ; and costants that define the herdware of my My6502 design.
+000000r 2               ; This enables to maintain the herdware relared constants separated from
+000000r 2               ; the main assembly code.
+000000r 2               
+000000r 2               ; Memory Map:
+000000r 2               ;  RAM	32k	0x0000	0x7FFF
+000000r 2               ;  I/O	8k	0x8000	0x9FFF
+000000r 2               ;  ROM	24k	0xA000	0xFFFF
+000000r 2               
+000000r 2               ; VIA
+000000r 2               VIA1_PORTB  = $9000
+000000r 2               VIA1_PORTA  = $9001
+000000r 2               VIA1_DDRB   = $9002
+000000r 2               VIA1_DDR    = $9003
+000000r 2               VIA1_T1CL   = $9004 ; Timer 1 Counter (low byte)
+000000r 2               VIA1_T1CH   = $9005 ; Timer 1 Counter (high byte)
+000000r 2               VIA1_ACR    = $900B ;  Auxiliary Control register @
+000000r 2               VIA1_IFR    = $900D ; Interrupt Flag Register
+000000r 2               VIA1_IER    = $900E ; Interrupt Enable Register
+000000r 2               
+000000r 2               ; 6522 VIA IFR REGISTER
+000000r 2               ; Bit Desc
+000000r 2               ; 7   Any IRQ
+000000r 2               ; 6   Timer 1 Overflow Interrupt
+000000r 2               ; 5   Timer 2 Overflow Interrupt
+000000r 2               ; 4   CB1 Active Edge
+000000r 2               ; 3   CB2 Active Edge
+000000r 2               ; 2   Shift Register Complete 8 Shifts
+000000r 2               ; 1   CA1 Active Edge
+000000r 2               ; 0   CA2 Active Edge
+000000r 2               
+000000r 2               
+000000r 2               ; ACIA MC60B50
+000000r 2               ; Chip Select Connections
+000000r 2               ; CS0	 = A4
+000000r 2               ; CS1	 = A4
+000000r 2               ; ~CS2   = ~IO_SEL
+000000r 2               ; RS     = A3
+000000r 2               ACIA_BASE     = $8010
+000000r 2               ACIA_STATUS   = ACIA_BASE       ; Read Only RS 0 + R
+000000r 2               ACIA_CONTROL  = ACIA_BASE       ; Write Only RS 0 + W
+000000r 2               ACIA_DATA     = ACIA_BASE + 8   ; RS 1 + R/W > RX/TX
+000000r 2               
+000000r 2               
+000000r 2               
+000000r 2               ; ACIA Constants
+000000r 2               ;
+000000r 2               ACIA_TDRE       = %00000010    ; bitmask for TRDE
+000000r 2               ACIA_RDRF       = %00000001    ; bitmask for RDRF
+000000r 2               ACIA_RESET      = %00000011    ; 6850 reset
+000000r 2               ; ACIA Config
+000000r 2               ; Bit# / Desc
+000000r 2               ; 7/ RX IRQ
+000000r 2               ; 6,5/ TX IRQ & RTS
+000000r 2               ; 4,3,2/ Bit length, parity & stop
+000000r 2               ; 1,0/ ÷1,÷16,÷64 Clock Divider & Reset
+000000r 2               ; CLK @ 1.8432Mhz
+000000r 2               ACIA_CFG_115    = %00010101    ; 8-N-1, 115200bps, no IRQ - /16 CLK
+000000r 2               ACIA_CFG_28     = %00010110    ; 8-N-1, 28800bps, no IRQ - /64 CLK
+000000r 2               ACIA_CFG_28I    = %10010110    ; 8-N-1, 28800bps, IRQ - /64 CLK
+000000r 2               
+000000r 2               ; Misc Constants
+000000r 2               TIMER_INTVL     = $270E        ; The number the timer is going to count down from every 10 ms
+000000r 2               CR    = $0D
+000000r 2               LF    = $0A
+000000r 2               BS    = $08
+000000r 2               DEL   = $7F
+000000r 2               SPACE = $20
+000000r 2               ESC   = $1B
+000000r 2               NULL  = $00
+000000r 2               
+000000r 2               ; zero page variables from $0000 to $00FF
+000000r 2               ZP_START        = $00
+000000r 2               JIFFY           = $0A  ; $0A & $0B A two-byte memory location to store a jiffy counter each jiffy is 10 ms
+000000r 2               LED_STATUS      = $10
+000000r 2               LAST_TOGGLE     = $11
+000000r 2               LED_DIR         = $12
+000000r 2               PTR_RD_RX_BUF   = $13 ; RX Read Buffer Pointer
+000000r 2               PTR_WR_RX_BUF   = $14 ; RX Write Buffer Pointer
+000000r 2               PTR_TX          = $15 ; Transmit String Pointer
+000000r 2               PTR_TX_L        = $15 ;
+000000r 2               PTR_TX_H        = $16 ;
+000000r 2               
+000000r 2               ; reserved memory variables
+000000r 2               PAGE1_START     = $0100  ; page 1 from $0100-$01FF
+000000r 2               ACIA_RX_BUFFER  = $0200  ; Serial RX Buffer to $02FF > 256 byte serial receive buffer
+000000r 2               
+000000r 2               
+000000r 1               
+000000r 1               ; ROM Segment START
+000000r 1               ; the first 8k of the ROM are not available
+000000r 1               ; the IO overlays this seccion
+000000r 1               .segment "ROM"
+000000r 1               ;.org $8000
+000000r 1  52 4F 4D 20    .byte "ROM starts at $A000 (2000)      "
+000004r 1  73 74 61 72  
+000008r 1  74 73 20 61  
+000020r 1  62 69 6F 73    .byte "bios.asm                        "
+000024r 1  2E 61 73 6D  
+000028r 1  20 20 20 20  
+000040r 1  56 49 41 20    .byte "VIA at $9000"
+000044r 1  61 74 20 24  
+000048r 1  39 30 30 30  
+00004Cr 1  EA             nop
+00004Dr 1               
+00004Dr 1               ; BIOS Segment START
+00004Dr 1               .segment "BIOS"
+000000r 1               ;.org $A000 ; ROM Start
+000000r 1               
+000000r 1               ; Reset Vector
+000000r 1               reset:
+000000r 1  78             sei ;disable interrupts
+000001r 1  D8             cld ;turn decimal mode off
+000002r 1  A2 FF          ldx #$FF
+000004r 1  9A             txs ; set the stack
+000005r 1                 ; init Jiffy
+000005r 1  A9 00          lda #$0
+000007r 1  85 0A          sta JIFFY
+000009r 1  85 0B          sta JIFFY + 1
+00000Br 1  85 11          sta LAST_TOGGLE
+00000Dr 1               
+00000Dr 1                 ; Set VIA portB
+00000Dr 1  A9 FF          lda #$ff ; Set all pins on port B to output
+00000Fr 1  8D 02 90       sta VIA1_DDRB
+000012r 1  85 12          sta LED_DIR ; LED direction for KITT $FF right $00 left
+000014r 1                 ; init port B
+000014r 1  A9 01          lda #%00000001
+000016r 1  8D 00 90       sta VIA1_PORTB
+000019r 1  85 10          sta LED_STATUS
+00001Br 1               
+00001Br 1                 ; init routines
+00001Br 1  20 rr rr       jsr init_timer    ; VIA1 IRQ Timer
+00001Er 1  20 rr rr       jsr init_serial   ; 65B50 ACIA
+000021r 1               
+000021r 1  A9 rr          lda #<startupMessage
+000023r 1  85 15          sta PTR_TX
+000025r 1  A9 rr          lda #>startupMessage
+000027r 1  85 16          sta PTR_TX_H
+000029r 1  20 rr rr       jsr serial_out_str
+00002Cr 1  A9 3E          lda #'>'
+00002Er 1  20 rr rr       jsr serial_out
+000031r 1               
+000031r 1               
+000031r 1               
+000031r 1               ; Main BIOS Loop
+000031r 1               main_loop:
+000031r 1  EA             nop
+000032r 1  20 rr rr       jsr kitt_led ; just cycle the LEDs in Port B
+000035r 1  20 rr rr       jsr serial_in
+000038r 1  90 03          bcc no_char ; nothing received
+00003Ar 1  20 rr rr       jsr serial_out ; echo char
+00003Dr 1                 no_char:
+00003Dr 1  4C rr rr         jmp main_loop
+000040r 1               
+000040r 1               ; Move LED bar in Port B like K.I.T.T
+000040r 1               kitt_led:
+000040r 1  48             pha
+000041r 1  DA             phx
+000042r 1  38             sec
+000043r 1  A5 0A          lda JIFFY
+000045r 1  E5 11          sbc LAST_TOGGLE
+000047r 1  C9 19          cmp #25 ; have 250ms passed?
+000049r 1  90 28          bcc exit_kitt ; if not return
+00004Br 1                 ; time has passed rotate the LEDs
+00004Br 1  A6 12          ldx LED_DIR ; check which way we are going
+00004Dr 1  F0 0E          beq go_left
+00004Fr 1                 ; move led right
+00004Fr 1  A9 3E          lda #'>'
+000051r 1                 ;jsr serial_out
+000051r 1  A5 10          lda LED_STATUS
+000053r 1  4A             lsr ; shift right, move bit 0 in A to carry
+000054r 1  90 12          bcc rot_done ; bit 0 was clear we are done
+000056r 1  09 02          ora #$02 ; bit 0 was set so switch dir 00000010
+000058r 1  A2 00          ldx #$00
+00005Ar 1  4C rr rr       jmp rot_done
+00005Dr 1                 go_left:
+00005Dr 1                   ; move led left
+00005Dr 1  A9 3C            lda #'<'
+00005Fr 1                   ;jsr serial_out
+00005Fr 1  A5 10            lda LED_STATUS
+000061r 1  0A               asl ; shift left, move bit 7 in A to carry
+000062r 1  90 04            bcc rot_done ; bit 7 was clear we are done
+000064r 1  09 40            ora #$40 ; bit 7 was set so switch dir 01000000
+000066r 1  A2 FF            ldx #$ff
+000068r 1                 rot_done: ;
+000068r 1  85 10            sta LED_STATUS ; rotate done store new status
+00006Ar 1  8D 00 90         sta VIA1_PORTB
+00006Dr 1  A5 0A            lda JIFFY
+00006Fr 1  85 11            sta LAST_TOGGLE ; record the Jiffy of rotation
+000071r 1  86 12            stx LED_DIR ; store direction
+000073r 1               
+000073r 1                 exit_kitt:
+000073r 1  FA               plx
+000074r 1  68               pla
+000075r 1  60               rts
+000076r 1               
+000076r 1               ; Serial Transmit Routine
+000076r 1               ; Sends the char in A out the ACIA RS232
+000076r 1               serial_out:
+000076r 1  48             pha
+000077r 1                 pool_acia: ; pulling mode until ready to TX
+000077r 1  AD 10 80         lda ACIA_STATUS
+00007Ar 1  29 02            and #ACIA_TDRE     ; looking at Bit 1 TX Data Register Empty > High = Empty
+00007Cr 1  F0 F9            beq pool_acia     ; pooling loop if empty
+00007Er 1  68             pla
+00007Fr 1  8D 18 80       sta ACIA_DATA       ; output char in A to TDRE
+000082r 1  60             rts
+000083r 1               
+000083r 1               ; Serial Receive Routine
+000083r 1               ; Checks if the ACIA has RX a characted and put it in A
+000083r 1               ; if a byte was received sets the carry flag, if not it clears it
+000083r 1               serial_in:
+000083r 1  AD 10 80       lda ACIA_STATUS
+000086r 1  29 01          and #ACIA_RDRF     ; look at Bit 0 RX Data Register Full > High = Full
+000088r 1  F0 05          beq @no_data      ; nothing in the RX Buffer
+00008Ar 1  AD 18 80       lda ACIA_DATA     ; load the byte to A
+00008Dr 1  38             sec
+00008Er 1  60             rts
+00008Fr 1               @no_data:
+00008Fr 1  18             clc
+000090r 1  60             rts
+000091r 1               
+000091r 1               ; Serial TX a string from memory
+000091r 1               ; Sends the a null terminated string via RS232
+000091r 1               ; PTR_TX is a pointer to the string memory location
+000091r 1               serial_out_str:
+000091r 1  A0 00          ldy #0
+000093r 1                 @loop:
+000093r 1  B1 15            lda (PTR_TX),y
+000095r 1  F0 06            beq @null_found
+000097r 1  20 rr rr         jsr serial_out
+00009Ar 1  C8               iny
+00009Br 1  80 F6            bra @loop
+00009Dr 1                 @null_found:
+00009Dr 1  60             rts
+00009Er 1               
+00009Er 1               ; INIT VIA Timer 1 for the Jiffy counter
+00009Er 1               ; The timer will generate an IRQ every TIMER_INTVL (default $270E ~10ms)
+00009Er 1               init_timer:
+00009Er 1                 ; enable IRQ in VIA
+00009Er 1  A9 C0          lda #%11000000  ; setting bit 7 sets interrupts and bit 6 enables Timer 1
+0000A0r 1  8D 0E 90       sta VIA1_IER
+0000A3r 1  A9 40          lda #%01000000  ; Set Continuous interrupts with PB7 disabled
+0000A5r 1  8D 0B 90       sta VIA1_ACR
+0000A8r 1                 ; We set up TIMER_INTVL as count down value
+0000A8r 1  A9 0E          lda #<TIMER_INTVL      ; Load low byte of our 16-bit value
+0000AAr 1  8D 04 90       sta VIA1_T1CL
+0000ADr 1  A9 27          lda #>TIMER_INTVL      ; Load high byte of our 16-bit value
+0000AFr 1  8D 05 90       sta VIA1_T1CH          ; This starts the timer running
+0000B2r 1  58             cli ; enable interrupts
+0000B3r 1  60             rts
+0000B4r 1               
+0000B4r 1               ; INIT ACIA
+0000B4r 1               ; Reset and set ACIA config. Init the RX buffer pointer
+0000B4r 1               init_serial:
+0000B4r 1  A9 03          lda #ACIA_RESET
+0000B6r 1  8D 10 80       sta ACIA_CONTROL
+0000B9r 1  A9 16          lda #ACIA_CFG_28    ; 28800 8,N,1
+0000BBr 1  8D 10 80       sta ACIA_CONTROL
+0000BEr 1                 ; Init the RX buffer pointers
+0000BEr 1  A9 00          lda #0
+0000C0r 1  85 13          sta PTR_RD_RX_BUF
+0000C2r 1  85 14          sta PTR_WR_RX_BUF
+0000C4r 1  60             rts
+0000C5r 1               
+0000C5r 1               ; Main IRQ Service Routine
+0000C5r 1               irq_handler:
+0000C5r 1  48             pha
+0000C6r 1  DA             phx
+0000C7r 1  5A             phy
+0000C8r 1                 ; check who called me
+0000C8r 1  2C 0D 90       bit VIA1_IFR          ; Check VIA 1 Bit 6 copied to oVerflow flag, bit 7 to negative flag (Z)
+0000CBr 1  70 04          bvs irq_via1_timer1   ; Overflow set?, process this VIA for Timer 1 IRQ...
+0000CDr 1                 ; other IRQ stuff perhaps?
+0000CDr 1                 exit_isr:
+0000CDr 1  7A               ply
+0000CEr 1  FA               plx
+0000CFr 1  68               pla
+0000D0r 1  40               rti
+0000D1r 1               
+0000D1r 1               ; process VIA 1 Timer 1 IRQ a.k. Jiffy timer
+0000D1r 1               irq_via1_timer1:
+0000D1r 1                 ; process Timer 1 Jiffy counter > each jiffy is 10 ms
+0000D1r 1  2C 04 90       bit VIA1_T1CL     ; Clears the interrupt
+0000D4r 1  E6 0A          inc JIFFY         ; Increment low byte
+0000D6r 1  D0 02          bne irq_via1_end  ; Low byte didn't roll over (Z=0), so we're all done
+0000D8r 1  E6 0B          inc JIFFY + 1     ; previous byte rolled over, so increment high byte
+0000DAr 1                 irq_via1_end:
+0000DAr 1  4C rr rr         jmp exit_isr
+0000DDr 1               
+0000DDr 1               ; NMI Service Routine
+0000DDr 1               nmi_handler:
+0000DDr 1  4C rr rr       jmp reset
+0000E0r 1               
+0000E0r 1               ; ROM Data
+0000E0r 1               startupMessage:
+0000E0r 1  0C 0D 0A 23    .byte	$0C,$0D,$0A,"## My6502 ##",$0D,$0A,"-- v0.0.1",$0D,$0A,$00
+0000E4r 1  23 20 4D 79  
+0000E8r 1  36 35 30 32  
+0000FDr 1               
+0000FDr 1               endMessage:
+0000FDr 1  0D 0A 23 20    .byte	$0D,$0A,"# Bye !!",$0D,$0A,$00
+000101r 1  42 79 65 20  
+000105r 1  21 21 0D 0A  
+00010Ar 1               
+00010Ar 1               ; Vectors
+00010Ar 1               .segment "RESETVECTORS"
+000000r 1                 ;.org $fffa
+000000r 1  rr rr          .word nmi_handler ; NMI
+000002r 1  rr rr          .word reset       ; RESET
+000004r 1  rr rr          .word irq_handler ; IRQ/BRK
+000004r 1               
