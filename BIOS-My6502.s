@@ -52,6 +52,11 @@ reset:
   ; init routines
   jsr init_timer    ; VIA1 IRQ Timer
   jsr init_serial   ; 65B50 ACIA
+  ; configure terminal 
+  ; 28.8 8-N-1
+  ; - Send only CR (not CR+LF)
+  ; - Handle BS ($08) and DEL ($7F)
+  ; - Clear Screen on FF ($0C)
 
   lda #<startupMessage
   sta PTR_TX
@@ -66,7 +71,7 @@ command_prompt:
   nop
   accept_command:
     jsr out_prompt    ; Show Prompt
-    ldy #$01          ; Init TXT Buffer index
+    ldy #$00          ; Init TXT Buffer index
     next_char:
       jsr serial_in     ; Check for Char
       bcc next_char     ; nothing received keep waiting
@@ -79,11 +84,12 @@ command_prompt:
       iny               ; inc buffee cursor
       bpl next_char     ; ask for next if buffer is not full (>127)
     ; line buffer overflow
+    jsr out_crlf      ; send CRLF
     lda #<err_overflow
     sta PTR_TX_L
     lda #>err_overflow
     sta PTR_TX_H
-    jsr serial_out_str  
+    jsr serial_out_str  ; Print Error
     jmp accept_command
 
   delete_last:          ; backspace pressed
@@ -92,27 +98,39 @@ command_prompt:
     jmp next_char       ; ask for next
 
   process_line:       ; process the command line
+    jsr out_crlf      ; send CRLF
+    ; jump to WOZ
+    ldx #$00
+    lda RX_BUFFER,x
+    cmp #$21          ; is !(bang)?
+    beq go_woz        ; Yes
     ; just echo it now
-    lda #$00          ; null terminate the buffer
-    iny
+    lda #$00          ; null terminate the buffer replacing the CR
     sta RX_BUFFER,y 
     lda #<RX_BUFFER     ; print buffer contents
     sta PTR_TX_L
     lda #>RX_BUFFER
     sta PTR_TX_H
     jsr serial_out_str  ; echo buffer back   
-    lda #$0D            ; send CRLF
-    jsr serial_out
-    lda #$0A
-    jsr serial_out
     jmp accept_command  ; start over
+
+; Run WozMon
+go_woz:
+  lda #<msg_wozmon
+  sta PTR_TX_L
+  lda #>msg_wozmon
+  sta PTR_TX_H
+  jsr serial_out_str  ; Print Message
+  jsr out_crlf      ; send CRLF
+  jmp WOZMON
 
 ; Command prompt messages
 err_overflow:
   .asciiz "! Buffer Overflow"
 err_notfound:
   .asciiz "! Command not found"
-
+msg_wozmon:
+  .asciiz "> WozMon <"
 
 ; Send Prompt 
 out_prompt:
