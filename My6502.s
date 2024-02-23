@@ -84,7 +84,18 @@ PTR_TX          = $15 ; Transmit String Pointer
 PTR_TX_L        = $15 ;
 PTR_TX_H        = $16 ;
 
+; WozMon uses $24 to $2B for its variables
+;XAML  = $24                            ; Last "opened" location Low
+;XAMH  = $25                            ; Last "opened" location High
+;STL   = $26                            ; Store address Low
+;STH   = $27                            ; Store address High
+;L     = $28                            ; Hex value parsing Low
+;H     = $29                            ; Hex value parsing High
+;YSAV  = $2A                            ; Used to see if hex value is given
+;MODE  = $2B                            ; $00=XAM, $7F=STOR, $AE=BLOCK XAM
+
 ; reserved memory variables
 PAGE1_START     = $0100  ; page 1 from $0100-$01FF
 ACIA_RX_BUFFER  = $0200  ; Serial RX Buffer to $02FF > 256 byte serial receive buffer
+                         ; Shared with WozMon IN Buffer
 

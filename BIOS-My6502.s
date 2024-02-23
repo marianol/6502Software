@@ -21,6 +21,13 @@
 .segment "BIOS"  
 ;.org $A000 ; ROM Start
 
+; Startup Messages
+startupMessage:
+  .byte	$0C,$0D,$0A,"## My6502 ##",$0D,$0A,"-- v0.0.2",$0D,$0A,$00
+
+endMessage:
+  .byte	$0D,$0A,"# Bye !!",$0D,$0A,$00
+
 ; Reset Vector 
 reset:
   sei ;disable interrupts 
@@ -204,14 +211,12 @@ irq_via1_timer1:
 
 ; NMI Service Routine
 nmi_handler:
-  jmp reset
+  jmp WOZMON
 
 ; ROM Data
-startupMessage:
-  .byte	$0C,$0D,$0A,"## My6502 ##",$0D,$0A,"-- v0.0.1",$0D,$0A,$00
 
-endMessage:
-  .byte	$0D,$0A,"# Bye !!",$0D,$0A,$00
+; WozMon
+.include "wozmon_sbc.s" 
 
 ; Vectors
 .segment "RESETVECTORS"
