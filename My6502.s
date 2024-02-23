@@ -96,6 +96,6 @@ PTR_TX_H        = $16 ;
 
 ; reserved memory variables
 PAGE1_START     = $0100  ; page 1 from $0100-$01FF
-ACIA_RX_BUFFER  = $0200  ; Serial RX Buffer to $02FF > 256 byte serial receive buffer
+RX_BUFFER  = $0200  ; Serial RX Buffer to $02FF > 256 byte serial receive buffer
                          ; Shared with WozMon IN Buffer
 

@@ -56,26 +56,106 @@ reset:
   ; init routines
   jsr init_timer    ; VIA1 IRQ Timer
   jsr init_serial   ; 65B50 ACIA
+  ; configure terminal 
+  ; 28.8 8-N-1
+  ; - Send only CR (not CR+LF)
+  ; - Handle BS ($08) and DEL ($7F)
+  ; - Clear Screen on FF ($0C)
 
   lda #<startupMessage
   sta PTR_TX
   lda #>startupMessage
   sta PTR_TX_H
   jsr serial_out_str
-  lda #'>'
-  jsr serial_out
-
-  
+  ;jmp main_loop 
+  ; no need to JMP now we can just fall though
 
 ; Main BIOS Loop
-main_loop:
+command_prompt:
   nop
-  jsr kitt_led ; just cycle the LEDs in Port B
-  jsr serial_in
-  bcc no_char ; nothing received
-  jsr serial_out ; echo char
-  no_char:
-    jmp main_loop
+  accept_command:
+    jsr out_prompt    ; Show Prompt
+    ldy #$00          ; Init TXT Buffer index
+    next_char:
+      jsr serial_in     ; Check for Char
+      bcc next_char     ; nothing received keep waiting
+      sta RX_BUFFER,y   ; add to buffer
+      jsr serial_out    ; echo 
+      cmp #$08          ; is Backspace?
+      beq delete_last   ; Yes
+      cmp #$0D          ; is CR?
+      beq process_line  ; Yes
+      iny               ; inc buffee cursor
+      bpl next_char     ; ask for next if buffer is not full (>127)
+    ; line buffer overflow
+    jsr out_crlf      ; send CRLF
+    lda #<err_overflow
+    sta PTR_TX_L
+    lda #>err_overflow
+    sta PTR_TX_H
+    jsr serial_out_str  ; Print Error
+    jmp accept_command
+
+  delete_last:          ; backspace pressed
+    dey                 ; move buffer cursor back
+    bmi accept_command  ; buffer is empty, start over 
+    jmp next_char       ; ask for next
+
+  process_line:       ; process the command line
+    jsr out_crlf      ; send CRLF
+    ; jump to WOZ
+    ldx #$00
+    lda RX_BUFFER,x
+    cmp #$21          ; is !(bang)?
+    beq go_woz        ; Yes
+    ; just echo it now
+    lda #$00          ; null terminate the buffer replacing the CR
+    sta RX_BUFFER,y 
+    lda #<RX_BUFFER     ; print buffer contents
+    sta PTR_TX_L
+    lda #>RX_BUFFER
+    sta PTR_TX_H
+    jsr serial_out_str  ; echo buffer back   
+    jmp accept_command  ; start over
+
+; Run WozMon
+go_woz:
+  lda #<msg_wozmon
+  sta PTR_TX_L
+  lda #>msg_wozmon
+  sta PTR_TX_H
+  jsr serial_out_str  ; Print Message
+  jsr out_crlf      ; send CRLF
+  jmp WOZMON
+
+; Command prompt messages
+err_overflow:
+  .asciiz "! Buffer Overflow"
+err_notfound:
+  .asciiz "! Command not found"
+msg_wozmon:
+  .asciiz "> WozMon <"
+
+; Send Prompt 
+out_prompt:
+  pha
+  jsr out_crlf      ; send CRLF
+  ; Send Prompt "$ "
+  lda #'$'
+  jsr serial_out
+  lda #' '
+  jsr serial_out
+  pla
+  rts
+
+; Send CRLF > $0D,$0A 
+; does not preserve A
+out_crlf:
+  lda #$0D        ; CR
+  jsr serial_out
+  lda #$0A        ; LF
+  jsr serial_out
+  rts
 
 ; Move LED bar in Port B like K.I.T.T
 kitt_led:
@@ -198,6 +278,7 @@ irq_handler:
   bvs irq_via1_timer1   ; Overflow set?, process this VIA for Timer 1 IRQ...
   ; other IRQ stuff perhaps?
   exit_isr:
+    jsr kitt_led        ; just cycle the LEDs in VIA Port B if needed
     ply
     plx
     pla
