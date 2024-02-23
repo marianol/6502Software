@@ -1,7 +1,10 @@
 ; Written by Mariano Luna, 2024
 ; License: BSD-3-Clause
 ; https://opensource.org/license/bsd-3-clause
-; Version 0.0.2
+;
+; Define the version number
+.define VERSION "0.0.2"
+
 
 .setcpu "65C02"
 
@@ -14,6 +17,7 @@
 ;.org $8000 
   .byte "ROM starts at $A000 (2000)      "
   .byte "bios.asm                        "
+  .byte VERSION
   .byte "VIA at $9000"
   nop 
 
