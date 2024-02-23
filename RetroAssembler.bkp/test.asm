@@ -6,7 +6,7 @@ DDRA = $9003
   .org $8000
 
 reset:
-  lda #$ff    ; set all pins on Poert B to output
+  lda #$ff    ; set all pins on Port B to output
   sta DDRB
 
   lda #$50

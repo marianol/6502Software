@@ -196,7 +196,7 @@ nmi_handler:
 
 ; ROM Data
 startupMessage:
-  .byte	$0C,"## My6502 ##",$0D,$0A,"-- v0.0.1",$0D,$0A,$00
+  .byte	$0C,$0D,$0A,"## My6502 ##",$0D,$0A,"-- v0.0.1",$0D,$0A,$00
 
 endMessage:
   .byte	$0D,$0A,"# Bye !!",$0D,$0A,$00
