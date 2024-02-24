@@ -127,15 +127,21 @@ Current file: BIOS-My6502.s
 000020r 1  62 69 6F 73    .byte "bios.asm                        "
 000024r 1  2E 61 73 6D  
 000028r 1  20 20 20 20  
-000040r 1  30 2E 30 2E    .byte VERSION
-000044r 1  32           
-000045r 1  56 49 41 20    .byte "VIA at $9000"
-000049r 1  61 74 20 24  
-00004Dr 1  39 30 30 30  
-000051r 1  EA             nop
-000052r 1               
-000052r 1               ; BIOS Segment START
-000052r 1               .segment "BIOS"
+000040r 1  56 65 72 73    .byte "Version: "
+000044r 1  69 6F 6E 3A  
+000048r 1  20           
+000049r 1  30 2E 30 2E    .byte VERSION
+00004Dr 1  32           
+00004Er 1  20 20 20 20    .byte "                  "
+000052r 1  20 20 20 20  
+000056r 1  20 20 20 20  
+000060r 1  20 56 49 41    .byte " VIA at $9000 / ACIA $8010"
+000064r 1  20 61 74 20  
+000068r 1  24 39 30 30  
+00007Ar 1  EA             nop
+00007Br 1               
+00007Br 1               ; BIOS Segment START
+00007Br 1               .segment "BIOS"
 000000r 1               ;.org $A000 ; ROM Start
 000000r 1               
 000000r 1               ; Reset Vector

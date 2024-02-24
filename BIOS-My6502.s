@@ -17,8 +17,10 @@
 ;.org $8000 
   .byte "ROM starts at $A000 (2000)      "
   .byte "bios.asm                        "
+  .byte "Version: "
   .byte VERSION
-  .byte " VIA at $9000"
+  .byte "                  "
+  .byte " VIA at $9000 / ACIA $8010"
   nop 
 
 ; BIOS Segment START
