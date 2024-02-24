@@ -23,6 +23,12 @@
   .byte " VIA at $9000 / ACIA $8010"
   nop 
 
+; JUMP Table
+.segment "HEADER"
+COMMAND:      jmp command_prompt
+MONITOR:      jmp WOZMON
+;SERIAL_INIT:  jsr init_serial << how do I do this?
+
 ; BIOS Segment START
 .segment "BIOS"  
 ;.org $A000 ; ROM Start
