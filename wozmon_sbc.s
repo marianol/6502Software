@@ -21,7 +21,7 @@ IN              = $0200         ;  Input buffer to $027F
 
 WOZMON:
                 JSR     init_serial    ; Initialize ACIA
-                LDA     #$1B           ; Begin with escape. @why?
+                LDA     #$1B           ; Begin with escape. 
 NOTCR:
                 CMP     #$08           ; Backspace key?
                 BEQ     BACKSPACE      ; Yes.
@@ -33,8 +33,7 @@ ESCAPE:
                 LDA     #$5C           ; "\".
                 JSR     ECHO           ; Output it.
 GETLINE:
-                LDA     #$0D           ; Send CR
-                JSR     ECHO
+                JSR     out_crlf       ; Send CR+LF
                 LDY     #$01           ; Initialize text index.
 BACKSPACE:      DEY                    ; Back up text index.
                 BMI     GETLINE        ; Beyond start of line, reinitialize.
@@ -116,8 +115,7 @@ SETADR:         LDA     L-1,X          ; Copy hex data to
                 BNE     SETADR         ; Loop unless X = 0.
 NXTPRNT:
                 BNE     PRDATA         ; NE means no address to print.
-                LDA     #$0D           ; CR.
-                JSR     ECHO           ; Output it.
+                JSR     out_crlf       ; Send CR+LF 
                 LDA     XAMH           ; 'Examine index' high-order byte.
                 JSR     PRBYTE         ; Output it in hex format.
                 LDA     XAML           ; Low-order 'examine index' byte.
