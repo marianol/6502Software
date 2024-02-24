@@ -10,27 +10,20 @@
 
 .include "My6502.s" ; Constants and Labels
 
-; ROM Segment START
+; ROMFILL Segment START
 ; the first 8k of the ROM are not available
 ; the IO overlays this seccion
-.segment "ROM"     
+.segment "ROMFILL"     
 ;.org $8000 
   .byte "ROM starts at $A000 (2000)      "
   .byte "bios.asm                        "
   .byte VERSION
-  .byte "VIA at $9000"
+  .byte " VIA at $9000"
   nop 
 
 ; BIOS Segment START
 .segment "BIOS"  
 ;.org $A000 ; ROM Start
-
-; Startup Messages
-startupMessage:
-  .byte	$0C,$0D,$0A,"## My6502 ##",$0D,$0A,"-- v0.0.2",$0D,$0A,$00
-
-endMessage:
-  .byte	$0D,$0A,"# Bye !!",$0D,$0A,$00
 
 ; Reset Vector 
 reset:
@@ -67,10 +60,12 @@ reset:
   lda #>startupMessage
   sta PTR_TX_H
   jsr serial_out_str
-  ;jmp main_loop 
+  nop
+  ;jmp command_prompt 
   ; no need to JMP now we can just fall though
 
-; Main BIOS Loop
+; BIOS Command Prompt
+; Main PRG Loop
 command_prompt:
   nop
   accept_command:
@@ -299,6 +294,14 @@ nmi_handler:
   jmp WOZMON
 
 ; ROM Data
+; Startup Messages
+startupMessage:
+  .byte	$0C,$0D,$0A,"## My6502 ##",$0D,$0A,"-- v"
+  .byte VERSION
+  .byte $0D,$0A,$00
+
+endMessage:
+  .byte	$0D,$0A,"# Bye !!",$0D,$0A,$00
 
 ; WozMon
 .include "wozmon_sbc.s" 

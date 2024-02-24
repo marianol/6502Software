@@ -2,7 +2,7 @@
 ;  Written by Steve Wozniak in 1976
 
 ;  Adapted to an SBC with MC60B50 ACIA by Mariano Luna
-.segment "MONITOR"  
+.segment "WOZMON"  
 ; .org $FF00
 
 ; Page 0 Variables
