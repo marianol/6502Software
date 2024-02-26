@@ -111,7 +111,12 @@ command_prompt:
     lda RX_BUFFER,x
     cmp #$21          ; is !(bang)?
     beq go_woz        ; Yes
-    ; just echo it now
+    ; jump to Basic
+    ldx #$00
+    lda RX_BUFFER,x
+    cmp #$23          ; is #(hash)?
+    beq go_bas        ; Yes
+    ; no known just echo it now
     lda #$00          ; null terminate the buffer replacing the CR
     sta RX_BUFFER,y 
     lda #<RX_BUFFER     ; print buffer contents
@@ -121,6 +126,9 @@ command_prompt:
     jsr serial_out_str  ; echo buffer back   
     jmp accept_command  ; start over
 
+; Run Basic
+go_bas:
+  ; dont have it yet so run WozMon
 ; Run WozMon
 go_woz:
   lda #<msg_wozmon
