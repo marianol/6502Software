@@ -64,8 +64,8 @@ ACIA_CFG_28I    = %10010110    ; 8-N-1, 28800bps, IRQ - /64 CLK
 
 ; Misc Constants
 TIMER_INTVL     = $270E        ; The number the timer is going to count down from every 10 ms
-CR    = $0D
-LF    = $0A
+; CR    = $0D
+; LF    = $0A
 BS    = $08
 DEL   = $7F 
 SPACE = $20

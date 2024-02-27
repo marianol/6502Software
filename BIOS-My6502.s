@@ -3,7 +3,7 @@
 ; https://opensource.org/license/bsd-3-clause
 ;
 ; Define the version number
-.define VERSION "0.0.2"
+.define VERSION "0.0.3"
 
 
 .setcpu "65C02"
@@ -25,6 +25,7 @@
 
 ; JUMP Table
 .segment "HEADER"
+BASIC:        jmp COLD_START
 COMMAND:      jmp command_prompt
 MONITOR:      jmp WOZMON
 ;SERIAL_INIT:  jsr init_serial << how do I do this?
@@ -32,6 +33,8 @@ MONITOR:      jmp WOZMON
 ; BIOS Segment START
 .segment "BIOS"  
 ;.org $A000 ; ROM Start
+  .byte "BIOS Version:"
+  .byte VERSION
 
 ; Reset Vector 
 reset:
@@ -128,7 +131,9 @@ command_prompt:
 
 ; Run Basic
 go_bas:
-  ; dont have it yet so run WozMon
+  ; Jump to Basic
+  jmp COLD_START
+
 ; Run WozMon
 go_woz:
   lda #<msg_wozmon
@@ -248,6 +253,14 @@ serial_out_str:
     iny
     bra @loop
   @null_found:
+  rts
+
+
+; Dummy Function for MS Basic File IO 
+load_bas:
+  rts
+
+save_bas:
   rts
 
 ; INIT VIA Timer 1 for the Jiffy counter

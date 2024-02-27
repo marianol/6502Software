@@ -66,7 +66,7 @@ NEXTITEM:
                 CMP     #$3A           ; ":"?
                 BEQ     SETSTOR        ; Yes, set STOR mode.
                 CMP     #$52           ; "R"?
-                BEQ     RUN            ; Yes, run user program.
+                BEQ     RUNPRG            ; Yes, run user program.
                 STX     L              ; $00 -> L.
                 STX     H              ;    and H.
                 STY     YSAV           ; Save Y for comparison
@@ -103,7 +103,7 @@ NOTHEX:
                 BNE     NEXTITEM       ; Get next item (no carry).
                 INC     STH            ; Add carry to 'store index' high order.
 TONEXTITEM:     JMP     NEXTITEM       ; Get next command item.
-RUN:
+RUNPRG:
                 JMP     (XAML)         ; Run at current XAM index.
 NOTSTOR:
                 BMI     XAMNEXT        ; B7 = 0 for XAM, 1 for BLOCK XAM.
