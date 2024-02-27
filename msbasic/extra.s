@@ -27,3 +27,7 @@
 .ifdef SYM1
         .byte   0,0,0
 .endif
+
+.ifdef MY6502
+.include "../BIOS-My6502.s"
+.endif
