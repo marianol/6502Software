@@ -29,7 +29,7 @@ ZP_START4 = $13
 USR				:= GORESTART ; XXX
 
 ; inputbuffer
-; INPUTBUFFER     := $0200
+INPUTBUFFER     := $0200
 
 ; constants
 SPACE_FOR_GOSUB := $3E
