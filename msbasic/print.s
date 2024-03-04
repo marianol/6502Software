@@ -115,7 +115,7 @@ L29B9:
 .endif
 
 
-CRDO:
+CRDO: ; What does this do?
 .if .def(CONFIG_PRINTNULLS) && .def(CONFIG_FILE)
         lda     CURDVC
         bne     LC9D8
