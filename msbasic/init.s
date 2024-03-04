@@ -509,6 +509,12 @@ QT_BASIC:
         .byte   "### COMMODORE BASIC ###"
         .byte   CR,CR,0
   .endif
+  .ifdef MY6502
+        .byte   "### COMMODORE BASIC ###"
+        .byte   CR,LF
+        .byte   "COPYRIGHT 1977 BY MICROSOFT"
+        .byte   CR,LF,0
+  .endif
   .ifdef APPLE
         .byte   LF,CR,LF
 		.byte	"APPLE BASIC V1.1"

@@ -3,7 +3,7 @@
 ; https://opensource.org/license/bsd-3-clause
 ;
 ; Define the version number
-.define VERSION "0.1.0"
+.define VERSION "0.1.1"
 
 
 .setcpu "65C02"
@@ -107,19 +107,16 @@ command_prompt:
     jmp next_char       ; ask for next
 
   process_line:       ; process the command line
-    jsr out_crlf      ; send CRLF
-    ; jump to WOZ
     ldx #$00
     lda RX_BUFFER,x
     cmp #$21          ; is !(bang)?
     beq go_woz        ; Yes
-    ; jump to Basic
-    ldx #$00
     lda RX_BUFFER,x
     cmp #$23          ; is #(hash)?
     beq go_bas        ; Yes
     ; no known just echo it now
-    lda #$00          ; null terminate the buffer replacing the CR
+    jsr out_crlf
+    lda #$00          ; null terminate the buffer OVERRIDING THE CR
     sta RX_BUFFER,y 
     lda #<RX_BUFFER     ; print buffer contents
     sta PTR_TX_L
@@ -152,9 +149,9 @@ err_overflow:
 err_notfound:
   .byte "! Command not found",$0D,$0A,$00
 msg_wozmon:
-  .byte "> WozMon <",$0D,$0A,$00
+  .byte $0D,$0A,"> WozMon <",$0D,$0A,$00
 msg_basic:
-  .byte "> MS BASIC <",$0D,$0A,$00
+  .byte $0D,$0A,"> MS BASIC <",$00
 
 ; Send Prompt 
 out_prompt:

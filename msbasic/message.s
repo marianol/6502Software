@@ -35,11 +35,15 @@ QT_OK:
   .ifdef CONFIG_CBM_ALL
 		.byte   CR,LF,"READY.",CR,LF
   .else
-    .ifdef APPLE
+    .ifdef MY6502
+		.byte   CR,LF,"READY.",CR,LF
+    .else
+      .ifdef APPLE
 		; binary patch!
         .byte   CR,0,0,"K",CR,LF
-    .else
+      .else
 		.byte   CR,LF,"OK",CR,LF
+      .endif
     .endif
   .endif
 		.byte	0
