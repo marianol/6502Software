@@ -55,8 +55,11 @@ INLIN2:
 INLINAIM:
     .endif
     .ifndef CONFIG_NO_LINE_EDITING
-        cmp     #$07
+        cmp     #$07  ; BEL 
         beq     L2443
+        ; Patch to support Backspace (BS)
+        cmp     #$08  ; BS
+        beq     L2420
     .endif
         cmp     #$0D
         beq     L2453
@@ -65,7 +68,7 @@ INLINAIM:
       .ifdef AIM65
         bcc     L244E
       .else
-        bcc     INLIN2
+        bcc     INLIN2 ; accumulator < $20 ignore upper ascii
       .endif
       .ifdef MICROTAN
         cmp     #$80
