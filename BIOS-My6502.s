@@ -85,8 +85,7 @@ command_prompt:
     next_char:
       jsr serial_in     ; Check for Char
       bcc next_char     ; nothing received keep waiting
-      sta RX_BUFFER,y   ; add to buffer
-      jsr serial_out    ; echo 
+      sta RX_BUFFER,y   ; add to buffer 
       cmp #$08          ; is Backspace?
       beq delete_last   ; Yes
       cmp #$0D          ; is CR?
@@ -131,8 +130,12 @@ command_prompt:
 
 ; Run Basic
 go_bas:
-  ; Jump to Basic
-  jmp COLD_START
+  lda #<msg_basic
+  sta PTR_TX_L
+  lda #>msg_basic
+  sta PTR_TX_H
+  jsr serial_out_str  ; Print Message
+  jmp COLD_START      ; Jump to Basic
 
 ; Run WozMon
 go_woz:
@@ -141,16 +144,17 @@ go_woz:
   lda #>msg_wozmon
   sta PTR_TX_H
   jsr serial_out_str  ; Print Message
-  jsr out_crlf      ; send CRLF
-  jmp WOZMON
+  jmp WOZMON          ; Jump to WozMon
 
 ; Command prompt messages
 err_overflow:
-  .asciiz "! Buffer Overflow"
+  .byte "! Buffer Overflow",$0D,$0A,$00
 err_notfound:
-  .asciiz "! Command not found"
+  .byte "! Command not found",$0D,$0A,$00
 msg_wozmon:
-  .asciiz "> WozMon <"
+  .byte "> WozMon <",$0D,$0A,$00
+msg_basic:
+  .byte "> MS BASIC <",$0D,$0A,$00
 
 ; Send Prompt 
 out_prompt:
@@ -186,8 +190,6 @@ kitt_led:
   ldx LED_DIR ; check which way we are going
   beq go_left
   ; move led right 
-  lda #'>'
-  ;jsr serial_out 
   lda LED_STATUS
   lsr ; shift right, move bit 0 in A to carry
   bcc rot_done ; bit 0 was clear we are done
@@ -195,9 +197,7 @@ kitt_led:
   ldx #$00 
   jmp rot_done
   go_left: 
-    ; move led left
-    lda #'<'
-    ;jsr serial_out 
+    ; move led left 
     lda LED_STATUS
     asl ; shift left, move bit 7 in A to carry
     bcc rot_done ; bit 7 was clear we are done
@@ -232,9 +232,10 @@ serial_out:
 ; if a byte was received sets the carry flag, if not it clears it
 serial_in:
   lda ACIA_STATUS
-  and #ACIA_RDRF     ; look at Bit 0 RX Data Register Full > High = Full
+  and #ACIA_RDRF    ; look at Bit 0 RX Data Register Full > High = Full
   beq @no_data      ; nothing in the RX Buffer
   lda ACIA_DATA     ; load the byte to A
+  jsr serial_out    ; echo back
   sec
   rts 
 @no_data:
