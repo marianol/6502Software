@@ -3,7 +3,7 @@
 ; https://opensource.org/license/bsd-3-clause
 ;
 ; Define the version number
-.define VERSION "0.0.3"
+.define VERSION "0.1.0"
 
 
 .setcpu "65C02"

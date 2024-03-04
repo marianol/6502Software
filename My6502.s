@@ -74,15 +74,15 @@ NULL  = $00
 
 ; zero page variables from $0000 to $00FF
 ZP_START        = $00
-JIFFY           = $0A  ; $0A & $0B A two-byte memory location to store a jiffy counter each jiffy is 10 ms
-LED_STATUS      = $10
-LAST_TOGGLE     = $11
-LED_DIR         = $12
-PTR_RD_RX_BUF   = $13 ; RX Read Buffer Pointer
-PTR_WR_RX_BUF   = $14 ; RX Write Buffer Pointer
-PTR_TX          = $15 ; Transmit String Pointer
-PTR_TX_L        = $15 ;
-PTR_TX_H        = $16 ;
+JIFFY           = $A0  ; $0A & $0B A two-byte memory location to store a jiffy counter each jiffy is 10 ms
+LED_STATUS      = $B0
+LAST_TOGGLE     = $B1
+LED_DIR         = $B2
+PTR_RD_RX_BUF   = $B3 ; RX Read Buffer Pointer
+PTR_WR_RX_BUF   = $B4 ; RX Write Buffer Pointer
+PTR_TX          = $B5 ; Transmit String Pointer
+PTR_TX_L        = $B5 ;
+PTR_TX_H        = $B6 ;
 
 ; WozMon uses $24 to $2B for its variables
 ;XAML  = $24                            ; Last "opened" location Low

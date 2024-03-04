@@ -15,10 +15,10 @@ CONFIG_2A := 1
 CONFIG_SCRTCH_ORDER := 2
 
 ; zero page
-ZP_START1 = $00
-ZP_START2 = $0D
-ZP_START3 = $03
-ZP_START4 = $13
+ZP_START1 = $00 
+ZP_START2 = $0A
+ZP_START3 = $60
+ZP_START4 = $6B
 
 ; ; extra/override ZP variables
 ; CURDVC			:= $000E
@@ -29,7 +29,7 @@ ZP_START4 = $13
 USR				:= GORESTART ; XXX
 
 ; inputbuffer
-INPUTBUFFER     := $0200
+;INPUTBUFFER     := $0200
 
 ; constants
 SPACE_FOR_GOSUB := $3E
@@ -48,8 +48,8 @@ RAMSTART2		:= $0400
 ; CHKIN	:= $FFC6
 ; CHKOUT	:= $FFC9
 ; CLRCH	:= $FFCC
-; CHRIN	:= $FFCF
-; CHROUT	:= $FFD2
+CHRIN	:= serial_in ; $FFCF
+CHROUT	:= serial_out ; $FFD2
 LOAD	:= load_bas
 SAVE	:= save_bas
 ; VERIFY	:= $FFDB
