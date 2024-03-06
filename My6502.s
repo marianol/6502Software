@@ -32,6 +32,25 @@ VIA1_IER    = $900E ; Interrupt Enable Register
 ; 1   CA1 Active Edge
 ; 0   CA2 Active Edge
 
+; SPI on VIA Port A
+; SCL  PA0
+; MOSI PA1
+; MISO PA6
+; CS1  PA2
+; CS2  PA3
+; CS3  PA4
+; PA2, PA3, and PA4 are connected to the A, B, and C inputs on a 74xx138 3 to 8 decoder 
+; to provide chip selects for up to 7 devices 1-7, 0 is reserved for no device selected. 
+; See spi_select_device: routine for implementation.
+
+; Will use code from https://github.com/bradleystach/65C02-SPI
+; Note: 
+; Depending on the SPI modes you need, you can sometimes share clock and data lines 
+; with I²C.  You'll have to observe the following:
+;   - Never transition the data line when the clock is high except to produce start 
+;     and stop conditions on I²C.
+;   - Keep the EN (of Microwire) or CS (of SPI) lines high (false) when addressing 
+;    I²C devices.
 
 ; ACIA MC60B50
 ; Chip Select Connections
@@ -43,8 +62,6 @@ ACIA_BASE     = $8010
 ACIA_STATUS   = ACIA_BASE       ; Read Only RS 0 + R 
 ACIA_CONTROL  = ACIA_BASE       ; Write Only RS 0 + W
 ACIA_DATA     = ACIA_BASE + 8   ; RS 1 + R/W > RX/TX
-
-
 
 ; ACIA Constants
 ; 
@@ -74,28 +91,29 @@ NULL  = $00
 
 ; zero page variables from $0000 to $00FF
 ZP_START        = $00
-JIFFY           = $A0  ; $0A & $0B A two-byte memory location to store a jiffy counter each jiffy is 10 ms
-LED_STATUS      = $B0
-LAST_TOGGLE     = $B1
-LED_DIR         = $B2
-PTR_RD_RX_BUF   = $B3 ; RX Read Buffer Pointer
-PTR_WR_RX_BUF   = $B4 ; RX Write Buffer Pointer
-PTR_TX          = $B5 ; Transmit String Pointer
-PTR_TX_L        = $B5 ;
-PTR_TX_H        = $B6 ;
+JIFFY           = $E0  ; $E0 & $E1 A two-byte memory location to store a jiffy counter each jiffy is 10 ms
+LED_STATUS      = $E2
+LAST_TOGGLE     = $E3
+LED_DIR         = $E4
+PTR_RD_RX_BUF   = $E5 ; RX Read Buffer Pointer
+PTR_WR_RX_BUF   = $E6 ; RX Write Buffer Pointer
+PTR_TX          = $E7 ; Transmit String Pointer
+PTR_TX_L        = $E7 ; LO Byte
+PTR_TX_H        = $E8 ; HI Byte
 
-; WozMon uses $24 to $2B for its variables
-;XAML  = $24                            ; Last "opened" location Low
-;XAMH  = $25                            ; Last "opened" location High
-;STL   = $26                            ; Store address Low
-;STH   = $27                            ; Store address High
-;L     = $28                            ; Hex value parsing Low
-;H     = $29                            ; Hex value parsing High
-;YSAV  = $2A                            ; Used to see if hex value is given
-;MODE  = $2B                            ; $00=XAM, $7F=STOR, $AE=BLOCK XAM
+; WozMon ZeroPage Variables
+; uses $24 to $2B for its variables
+XAML            = $24           ;  Last "opened" location Low
+XAMH            = $25           ;  Last "opened" location High
+STL             = $26           ;  Store address Low
+STH             = $27           ;  Store address High
+L               = $28           ;  Hex value parsing Low
+H               = $29           ;  Hex value parsing High
+YSAV            = $2A           ;  Used to see if hex value is given
+MODE            = $2B           ;  $00=XAM, $7F=STOR, $AE=BLOCK XAM
 
 ; reserved memory variables
 PAGE1_START     = $0100  ; page 1 from $0100-$01FF
-RX_BUFFER  = $0200  ; Serial RX Buffer to $02FF > 256 byte serial receive buffer
+RX_BUFFER       = $0200  ; Serial RX Buffer to $02FF > 256 byte serial receive buffer
                          ; Shared with WozMon IN Buffer
 

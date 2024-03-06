@@ -1,5 +1,9 @@
 # Microsoft BASIC for 6502
 
+This is a fork of <https://github.com/mist64/msbasic> 
+
+**NOTE** adapted by Mariano Luna to run in the my6502 SBC computer
+
 This is a single integrated assembly source tree that can generate nine different versions of Microsoft BASIC for 6502.
 
 By running ./make.sh, this will generate all versions and compare them to the original files byte by byte. The CC65 compiler suite is need to build this project.
@@ -63,7 +67,7 @@ Also, Ben Eater has an published excellent video demonstrating how to port BASIC
 
 ## License
 
-2-clause BSD
+2-Clause BSD
 
 ## Credits
 

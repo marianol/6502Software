@@ -1,19 +1,12 @@
 ;  The WOZ Monitor for the Apple 1
 ;  Written by Steve Wozniak in 1976
+;  Adapted to the My6502 SBC with MC60B50 ACIA by Mariano Luna
 
-;  Adapted to an SBC with MC60B50 ACIA by Mariano Luna
 .segment "WOZMON"  
 ; .org $FF00
 
 ; Page 0 Variables
-XAML            = $24           ;  Last "opened" location Low
-XAMH            = $25           ;  Last "opened" location High
-STL             = $26           ;  Store address Low
-STH             = $27           ;  Store address High
-L               = $28           ;  Hex value parsing Low
-H               = $29           ;  Hex value parsing High
-YSAV            = $2A           ;  Used to see if hex value is given
-MODE            = $2B           ;  $00=XAM, $7F=STOR, $AE=BLOCK XAM
+; Moved to My6502.s
 
 ; Other Variables
 
